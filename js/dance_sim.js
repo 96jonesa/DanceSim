@@ -219,21 +219,26 @@ function plDestFindById(id) {
     var destX = leaderX;
     var destY = leaderY;
 
-    console.log(leaderOrientation);
-
-    if (leaderOrientation.charAt[0] === "n") {
+    if (leaderOrientation === "n") {
         destY = leaderY - 1;
-        leaderOrientation = leaderOrientation.substring(1);
-    } else if (leaderOrientation.charAt[0] === "s") {
+    } else if (leaderOrientation === "s") {
         destY = leaderY + 1;
-        leaderOrientation = leaderOrientation.substring(1);
-    }
-    if (leaderOrientation.length > 0) {
-        if (leaderOrientation === "w") {
-            destX = leaderX + 1;
-        } else { // else east
-            destX = leaderX - 1;
-        }
+    } else if (leaderOrientation === "e") {
+        destX = leaderX - 1;
+    } else if (leaderOrientation === "w") {
+        destX = leaderX + 1;
+    } else if (leaderOrientation === "ne") {
+        destX = leaderX - 1;
+        destY = leaderY - 1;
+    } else if (leaderOrientation === "nw") {
+        destX = leaderX + 1;
+        destY = leaderY - 1;
+    } else if (leaderOrientation === "se") {
+        destX = leaderX - 1;
+        destY = leaderY + 1;
+    } else if (leaderOrientation === "sw") {
+        destX = leaderX + 1;
+        destY = leaderY + 1;
     }
 
     daPlayers[id].destX = destX;
