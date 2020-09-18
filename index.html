@@ -2,6 +2,18 @@
 <title>Dance Simulator</title>
 <script src="js/dance_sim.js"></script>
 Tick duration (milliseconds): <input id="tickduration" type="number" min="100" max="2400" value="600"/><br>
+Number of players: <input id="numplayers" type="number" min="2" max="40" value="3"/><br>
+<input type="color" id="lead" name="lead" value="#ffffff"> Lead<br>
+<input type="color" id="middle" name="middle" value="#0000ff"> Middle<br>
+<input type="color" id="back" name="back" value="#ff0000"> Back<br>
 <button id="simstart"></button><br>
 <canvas id="dancesimcanvas"></canvas><br>
-Hello
+Select a number of players between 2 and 40, inclusive. Default is 3 players.<br>
+Select a tick duration between 100 and 2400 milliseconds, inclusive. Default is 600 ms.<br>
+Click the 'Start Sim' button to start the simulator with the given number of players and tick duration.<br>
+Click the 'Stop Sim' button to stop the simulator.<br>
+Click the colored rectangle beside 'Lead', 'Middle', and 'Back' to change the color of the lead, middle, and back players, respectively.<br>
+Control the lead player by left-clicking on the desired destination tile.<br>
+The middle players will follow the lead player (one will follow the lead, then one will follow that one, and so on).<br>
+The back player will follow the last middle player.<br>
+Right-click to make the lead player follow the back player. Right-click again to stop following the back player.

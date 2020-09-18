@@ -2,6 +2,10 @@
 const HTML_CANVAS = "dancesimcanvas";
 const HTML_TICK_DURATION = "tickduration";
 const HTML_START_BUTTON = "simstart";
+const HTML_NUM_PLAYERS = "numplayers";
+const HTML_LEAD_COLOR = "lead";
+const HTML_MIDDLE_COLOR = "middle";
+const HTML_BACK_COLOR = "back";
 
 window.onload = simInit;
 
@@ -10,6 +14,10 @@ window.onload = simInit;
 function simInit() {
     let canvas = document.getElementById(HTML_CANVAS);
     simTickDurationInput = document.getElementById(HTML_TICK_DURATION);
+    simNumPlayersInput = document.getElementById(HTML_NUM_PLAYERS);
+    simLeadColorInput = document.getElementById(HTML_LEAD_COLOR);
+    simMiddleColorInput = document.getElementById(HTML_MIDDLE_COLOR);
+    simBackColorInput = document.getElementById(HTML_BACK_COLOR);
     simStartStopButton = document.getElementById(HTML_START_BUTTON);
     simStartStopButton.onclick = simStartStopButtonOnClick;
     rInit(canvas, 64*12, 48*12);
@@ -25,6 +33,9 @@ function simInit() {
     simReset();
 
     canvas.onmousedown = simCanvasOnMouseDown;
+    canvas.oncontextmenu = function (e) { // prevent context menu from opening when right-clicking
+        e.preventDefault();
+    };
 }
 
 function simReset() {
@@ -56,7 +67,8 @@ function simCanvasOnMouseDown(e) {
     let xTile = Math.trunc((e.clientX - canvasRect.left) / rrTileSize);
     let yTile = Math.trunc((canvasRect.bottom - 1 - e.clientY) / rrTileSize);
     if (e.button === 0) {
-        //plPathfind(xTile, yTile);
+        plPathfind(xTile, yTile);
+        plIsDancing = false;
     } else if (e.button === 2) {
         plIsDancing = true;
     }
@@ -72,12 +84,16 @@ function simDraw() {
 function simTick() {
     for (let i = 0; i < daPlayers.length; ++i) {
         daPlayers[i].tick();
-        simDraw();
     }
+    simDraw();
 }
 
 var simIsRunning;
 var simTickDurationInput;
+var simNumPlayersInput;
+var simLeadColorInput;
+var simMiddleColorInput;
+var simBackColorInput;
 var simTickTimerId;
 var simStartStopButton;
 
@@ -86,31 +102,59 @@ var simStartStopButton;
 //{ DanceArena - da
 
 function daDrawPlayers() {
-    rSetDrawColor(10, 10, 240, 127);
-    for (let i = 0; i < daPlayers.length; ++i) {
+    rSetDrawColor((daLeadColor >> 16) & 255, (daLeadColor >> 8) & 255, daLeadColor & 255, 255);
+    rrFill(daPlayers[0].x, daPlayers[0].y);
+
+    rSetDrawColor((daMiddleColor >> 16) & 255, (daMiddleColor >> 8) & 255, daMiddleColor & 255, 255);
+    for (let i = 1; i < daPlayers.length - 1; ++i) {
         rrFill(daPlayers[i].x, daPlayers[i].y);
     }
+
+    rSetDrawColor((daBackColor >> 16) & 255, (daBackColor >> 8) & 255, daBackColor & 255, 255);
+    rrFill(daPlayers[daPlayers.length - 1].x, daPlayers[daPlayers.length - 1].y);
 }
 
 function daInit() {
     daPlayers = [];
-    daPlayers.push(new plPlayer(20, 20));
-    daPlayers.push(new plPlayer(25, 25));
+    for (let i = 0; i < simNumPlayersInput.value; i++) {
+        daPlayers.push(new plPlayer(20 + i, 20, daPlayers.length));
+    }
     plIsDancing = false;
+    plIsRunning = false;
+
+    daLeadColor = Number("0x" + simLeadColorInput.value.substring(1));
+    daMiddleColor = Number("0x" + simMiddleColorInput.value.substring(1));
+    daBackColor = Number("0x" + simBackColorInput.value.substring(1));
 }
 
 var daPlayers;
+
+var daLeadColor;
+var daMiddleColor;
+var daBackColor;
 
 //}
 
 //{ Player - pl
 
-function plPlayer(x, y) {
+function plPlayer(x, y, id) {
     this.x = x;
     this.y = y;
+    this.id = id;
 
     this.tick = function() {
-        this.x = (this.x + 1) % 64;
+        if (this.id === 0) { // if dance leader, then move to destination tile
+            if (plPathQueuePos > 0) {
+                this.x = plPathQueueX[--plPathQueuePos];
+                this.y = plPathQueueY[plPathQueuePos];
+                if (plIsRunning && plPathQueuePos > 0) {
+                    this.x = plPathQueueX[--plPathQueuePos];
+                    this.y = plPathQueueY[plPathQueuePos];
+                }
+            }
+        } else { // if not dance leader, then follow the preceding player
+            this.x = (this.x + 1) % 64;
+        }
     }
 }
 
@@ -265,6 +309,7 @@ var plPathQueueX;
 var plPathQueueY;
 
 var plIsDancing;
+var plIsRunning;
 
 //{ Map - m
 
