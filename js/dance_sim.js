@@ -6,6 +6,7 @@ const HTML_NUM_PLAYERS = "numplayers";
 const HTML_LEAD_COLOR = "lead";
 const HTML_MIDDLE_COLOR = "middle";
 const HTML_BACK_COLOR = "back";
+const HTML_TOGGLE_TICK_PER_CLICK = "tickperclick";
 
 window.onload = simInit;
 
@@ -18,6 +19,8 @@ function simInit() {
     simLeadColorInput = document.getElementById(HTML_LEAD_COLOR);
     simMiddleColorInput = document.getElementById(HTML_MIDDLE_COLOR);
     simBackColorInput = document.getElementById(HTML_BACK_COLOR);
+    simToggleTickPerClick = document.getElementById(HTML_TOGGLE_TICK_PER_CLICK);
+    simToggleTickPerClick.onchange = simToggleTickPerClickOnChange;
     simStartStopButton = document.getElementById(HTML_START_BUTTON);
     simStartStopButton.onclick = simStartStopButtonOnClick;
     rInit(canvas, 64*12, 48*12);
@@ -44,6 +47,7 @@ function simReset() {
     }
     simIsRunning = false;
     simStartStopButton.innerHTML = "Start Sim";
+    simTickPerClick = (simToggleTickPerClick.value === "yes") ? true : false;
     daInit();
     plInit();
     simDraw();
@@ -57,8 +61,10 @@ function simStartStopButtonOnClick() {
         simStartStopButton.innerHTML = "Stop Sim";
         daInit();
         plInit();
-        simTick();
-        simTickTimerId = setInterval(simTick, Number(simTickDurationInput.value)); // tick time in milliseconds (set to 600 for real)
+        if (!simTickPerClick) {
+            simTick();
+            simTickTimerId = setInterval(simTick, Number(simTickDurationInput.value)); // tick time in milliseconds (set to 600 for real)
+        }
     }
 }
 
@@ -69,15 +75,20 @@ function simCanvasOnMouseDown(e) {
     if (e.button === 0) {
         plPathfind(xTile, yTile);
         plIsDancing = false;
+        if (simTickPerClick) {
+            clearInterval(simTickTimerId);
+            simTick();
+        }
     } else if (e.button === 2) {
         plIsDancing = true;
+        simTickTimerId = setInterval(simTick, Number(simTickDurationInput.value)); // tick time in milliseconds (set to 600 for real)
     }
 }
 
 function simDraw() {
     mDrawMap();
     daDrawPlayers();
-    mDrawGrid()
+    mDrawGrid();
     rPresent();
 }
 
@@ -98,8 +109,15 @@ var simNumPlayersInput;
 var simLeadColorInput;
 var simMiddleColorInput;
 var simBackColorInput;
+var simToggleTickPerClick;
 var simTickTimerId;
 var simStartStopButton;
+
+var simTickPerClick;
+
+function simToggleTickPerClickOnChange(e) {
+    simTickPerClick = (simToggleTickPerClick.value === "yes") ? true : false;
+}
 
 //}
 
