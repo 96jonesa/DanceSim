@@ -43,7 +43,7 @@ function simReset() {
         clearInterval(simTickTimerId);
     }
     simIsRunning = false;
-    simStartStopButton.innerHTML = "Start Wave";
+    simStartStopButton.innerHTML = "Start Sim";
     daInit();
     plInit();
     simDraw();
@@ -54,7 +54,7 @@ function simStartStopButtonOnClick() {
         simReset();
     } else {
         simIsRunning = true;
-        simStartStopButton.innerHTML = "Stop Wave";
+        simStartStopButton.innerHTML = "Stop Sim";
         daInit();
         plInit();
         simTick();
@@ -82,7 +82,7 @@ function simDraw() {
 }
 
 function simTick() {
-    for (let i = 1; i <  daPlayers.length; i++) {
+    for (let i = 0; i <  daPlayers.length; i++) {
         plDestFindById(i);
         plPathFindById(i);
     }
@@ -170,6 +170,7 @@ function plPlayer(x, y, id, orientation) {
                 }
             }
 
+            /*
             var oldOrientation = this.orientation;
 
             this.orientation = "";
@@ -188,8 +189,8 @@ function plPlayer(x, y, id, orientation) {
 
             if (this.orientation === "") {
                 this.orientation = oldOrientation;
-            }
-        } else if (this.id === 1) {
+            }*/
+        } else {
             if (this.pathQueuePos > 0) {
                 this.x = this.pathQueueX[--this.pathQueuePos];
                 this.y = this.pathQueueY[this.pathQueuePos];
@@ -198,8 +199,26 @@ function plPlayer(x, y, id, orientation) {
                     this.y = this.pathQueueY[this.pathQueuePos];
                 }
             }
-        } else { // if not dance leader, then follow the preceding player
-            this.x = (this.x + 1) % 64;
+        }
+
+        var oldOrientation = this.orientation;
+
+        this.orientation = "";
+
+        if (oldY < this.y) {
+            this.orientation += "n";
+        } else if (oldY > this.y) {
+            this.orientation += "s";
+        }
+
+        if (oldX < this.x) {
+            this.orientation += "e";
+        } else if (oldX > this.x) {
+            this.orientation += "w";
+        }
+
+        if (this.orientation === "") {
+            this.orientation = oldOrientation;
         }
     }
 }
@@ -213,9 +232,9 @@ function plInit() {
 }
 
 function plDestFindById(id) {
-    var leaderOrientation = daPlayers[id - 1].orientation;
-    var leaderX = daPlayers[id - 1].x;
-    var leaderY = daPlayers[id - 1].y;
+    var leaderOrientation = daPlayers[(daPlayers.length + id - 1) % daPlayers.length].orientation;
+    var leaderX = daPlayers[(daPlayers.length + id - 1) % daPlayers.length].x;
+    var leaderY = daPlayers[(daPlayers.length + id - 1) % daPlayers.length].y;
     var destX = leaderX;
     var destY = leaderY;
 
