@@ -1,6 +1,7 @@
 'use strict';
-const HTML_CANVAS = "basimcanvas";
+const HTML_CANVAS = "dancesimcanvas";
 const HTML_TICK_DURATION = "tickduration";
+const HTML_START_BUTTON = "simstart";
 
 window.onload = simInit;
 
@@ -9,6 +10,8 @@ window.onload = simInit;
 function simInit() {
     let canvas = document.getElementById(HTML_CANVAS);
     simTickDurationInput = document.getElementById(HTML_TICK_DURATION);
+    simStartStopButton = document.getElementById(HTML_START_BUTTON);
+    simStartStopButton.onclick = simStartStopButtonOnClick;
     rInit(canvas, 64*12, 48*12);
     rrInit(12);
 
@@ -18,10 +21,45 @@ function simInit() {
     }
 
     mInit(mOPEN_MAP, 64, 48);
-    daPlayers = [];
-    daPlayers.push(new plPlayer(20, 20));
-    daPlayers.push(new plPlayer(25, 25));
+
+    simReset();
+
+    canvas.onmousedown = simCanvasOnMouseDown;
+}
+
+function simReset() {
+    if (simIsRunning) {
+        clearInterval(simTickTimerId);
+    }
+    simIsRunning = false;
+    simStartStopButton.innerHTML = "Start Wave";
+    daInit();
+    plInit();
     simDraw();
+}
+
+function simStartStopButtonOnClick() {
+    if (simIsRunning) {
+        simReset();
+    } else {
+        simIsRunning = true;
+        simStartStopButton.innerHTML = "Stop Wave";
+        daInit();
+        plInit();
+        simTick();
+        simTickTimerId = setInterval(simTick, Number(simTickDurationInput.value)); // tick time in milliseconds (set to 600 for real)
+    }
+}
+
+function simCanvasOnMouseDown(e) {
+    var canvasRect = rCanvas.getBoundingClientRect();
+    let xTile = Math.trunc((e.clientX - canvasRect.left) / rrTileSize);
+    let yTile = Math.trunc((canvasRect.bottom - 1 - e.clientY) / rrTileSize);
+    if (e.button === 0) {
+        //plPathfind(xTile, yTile);
+    } else if (e.button === 2) {
+        plIsDancing = true;
+    }
 }
 
 function simDraw() {
@@ -31,7 +69,17 @@ function simDraw() {
     rPresent();
 }
 
+function simTick() {
+    for (let i = 0; i < daPlayers.length; ++i) {
+        daPlayers[i].tick();
+        simDraw();
+    }
+}
+
+var simIsRunning;
 var simTickDurationInput;
+var simTickTimerId;
+var simStartStopButton;
 
 //}
 
@@ -42,6 +90,13 @@ function daDrawPlayers() {
     for (let i = 0; i < daPlayers.length; ++i) {
         rrFill(daPlayers[i].x, daPlayers[i].y);
     }
+}
+
+function daInit() {
+    daPlayers = [];
+    daPlayers.push(new plPlayer(20, 20));
+    daPlayers.push(new plPlayer(25, 25));
+    plIsDancing = false;
 }
 
 var daPlayers;
@@ -55,9 +110,161 @@ function plPlayer(x, y) {
     this.y = y;
 
     this.tick = function() {
-        return true;
+        this.x = (this.x + 1) % 64;
     }
 }
+
+function plInit() {
+    plPathQueuePos = 0;
+    plPathQueueX = [];
+    plPathQueueY = [];
+    plShortestDistances = [];
+    plWayPoints = [];
+}
+
+function plPathfind(destX, destY) {
+    for (let i = 0; i < mWidthTiles*mHeightTiles; ++i) {
+        plShortestDistances[i] = 99999999;
+        plWayPoints[i] = 0;
+    }
+    plWayPoints[daPlayers[0].x + daPlayers[0].y*mWidthTiles] = 99;
+    plShortestDistances[daPlayers[0].x + daPlayers[0].y*mWidthTiles] = 0;
+    plPathQueuePos = 0;
+    let pathQueueEnd = 0;
+    plPathQueueX[pathQueueEnd] = daPlayers[0].x;
+    plPathQueueY[pathQueueEnd++] = daPlayers[0].y;
+    let currentX;
+    let currentY;
+    let foundDestination = false;
+    while (plPathQueuePos !== pathQueueEnd) {
+        currentX = plPathQueueX[plPathQueuePos];
+        currentY = plPathQueueY[plPathQueuePos++];
+        if (currentX === destX && currentY === destY) {
+            foundDestination = true;
+            break;
+        }
+        let newDistance = plShortestDistances[currentX + currentY*mWidthTiles] + 1;
+        let index = currentX - 1 + currentY*mWidthTiles;
+        if (currentX > 0 && plWayPoints[index] === 0 && (mCurrentMap[index] & 19136776) === 0) {
+            plPathQueueX[pathQueueEnd] = currentX - 1;
+            plPathQueueY[pathQueueEnd++] = currentY;
+            plWayPoints[index] = 2;
+            plShortestDistances[index] = newDistance;
+        }
+        index = currentX + 1 + currentY*mWidthTiles;
+        if (currentX < mWidthTiles - 1 && plWayPoints[index] === 0 && (mCurrentMap[index] & 19136896) === 0) {
+            plPathQueueX[pathQueueEnd] = currentX + 1;
+            plPathQueueY[pathQueueEnd++] = currentY;
+            plWayPoints[index] = 8;
+            plShortestDistances[index] = newDistance;
+        }
+        index = currentX + (currentY - 1)*mWidthTiles;
+        if (currentY > 0 && plWayPoints[index] === 0 && (mCurrentMap[index] & 19136770) === 0) {
+            plPathQueueX[pathQueueEnd] = currentX;
+            plPathQueueY[pathQueueEnd++] = currentY - 1;
+            plWayPoints[index] = 1;
+            plShortestDistances[index] = newDistance;
+        }
+        index = currentX + (currentY + 1)*mWidthTiles;
+        if (currentY < mHeightTiles - 1 && plWayPoints[index] === 0 && (mCurrentMap[index] & 19136800) === 0) {
+            plPathQueueX[pathQueueEnd] = currentX;
+            plPathQueueY[pathQueueEnd++] = currentY + 1;
+            plWayPoints[index] = 4;
+            plShortestDistances[index] = newDistance;
+        }
+        index = currentX - 1 + (currentY - 1)*mWidthTiles;
+        if (currentX > 0 && currentY > 0 && plWayPoints[index] === 0 &&
+            (mCurrentMap[index] & 19136782) == 0 &&
+            (mCurrentMap[currentX - 1 + currentY*mWidthTiles] & 19136776) === 0 &&
+            (mCurrentMap[currentX + (currentY - 1)*mWidthTiles] & 19136770) === 0) {
+            plPathQueueX[pathQueueEnd] = currentX - 1;
+            plPathQueueY[pathQueueEnd++] = currentY - 1;
+            plWayPoints[index] = 3;
+            plShortestDistances[index] = newDistance;
+        }
+        index = currentX + 1 + (currentY - 1)*mWidthTiles;
+        if (currentX < mWidthTiles - 1 && currentY > 0 && plWayPoints[index] === 0 &&
+            (mCurrentMap[index] & 19136899) == 0 &&
+            (mCurrentMap[currentX + 1 + currentY*mWidthTiles] & 19136896) === 0 &&
+            (mCurrentMap[currentX + (currentY - 1)*mWidthTiles] & 19136770) === 0) {
+            plPathQueueX[pathQueueEnd] = currentX + 1;
+            plPathQueueY[pathQueueEnd++] = currentY - 1;
+            plWayPoints[index] = 9;
+            plShortestDistances[index] = newDistance;
+        }
+        index = currentX - 1 + (currentY + 1)*mWidthTiles;
+        if (currentX > 0 && currentY < mHeightTiles - 1 && plWayPoints[index] === 0 &&
+            (mCurrentMap[index] & 19136824) == 0 &&
+            (mCurrentMap[currentX - 1 + currentY*mWidthTiles] & 19136776) === 0 &&
+            (mCurrentMap[currentX + (currentY + 1)*mWidthTiles] & 19136800) === 0) {
+            plPathQueueX[pathQueueEnd] = currentX - 1;
+            plPathQueueY[pathQueueEnd++] = currentY + 1;
+            plWayPoints[index] = 6;
+            plShortestDistances[index] = newDistance;
+        }
+        index = currentX + 1 + (currentY + 1)*mWidthTiles;
+        if (currentX < mWidthTiles - 1 && currentY < mHeightTiles - 1 && plWayPoints[index] === 0 &&
+            (mCurrentMap[index] & 19136992) == 0 &&
+            (mCurrentMap[currentX + 1 + currentY*mWidthTiles] & 19136896) === 0 &&
+            (mCurrentMap[currentX + (currentY + 1)*mWidthTiles] & 19136800) === 0) {
+            plPathQueueX[pathQueueEnd] = currentX + 1;
+            plPathQueueY[pathQueueEnd++] = currentY + 1;
+            plWayPoints[index] = 12;
+            plShortestDistances[index] = newDistance;
+        }
+    }
+    if (!foundDestination) {
+        let bestDistanceStart = 0x7FFFFFFF;
+        let bestDistanceEnd = 0x7FFFFFFF;
+        let deviation = 10;
+        for (let x = destX - deviation; x <= destX + deviation; ++x) {
+            for (let y = destY - deviation; y <= destY + deviation; ++y) {
+                if (x >= 0 && y >= 0 && x < mWidthTiles && y < mHeightTiles) {
+                    let distanceStart = plShortestDistances[x + y*mWidthTiles];
+                    if (distanceStart < 100) {
+                        let dx = Math.max(destX - x);
+                        let dy = Math.max(destY - y);
+                        let distanceEnd = dx*dx + dy*dy;
+                        if (distanceEnd < bestDistanceEnd || (distanceEnd === bestDistanceEnd && distanceStart < bestDistanceStart)) {
+                            bestDistanceStart = distanceStart;
+                            bestDistanceEnd = distanceEnd;
+                            currentX = x;
+                            currentY = y;
+                            foundDestination = true;
+                        }
+                    }
+                }
+            }
+        }
+        if (!foundDestination) {
+            plPathQueuePos = 0;
+            return;
+        }
+    }
+    plPathQueuePos = 0;
+    while (currentX !== daPlayers[0].x || currentY !== daPlayers[0].y) {
+        let waypoint = plWayPoints[currentX + currentY*mWidthTiles];
+        plPathQueueX[plPathQueuePos] = currentX;
+        plPathQueueY[plPathQueuePos++] = currentY;
+        if ((waypoint & 2) !== 0) {
+            ++currentX;
+        } else if ((waypoint & 8) !== 0) {
+            --currentX;
+        }
+        if ((waypoint & 1) !== 0) {
+            ++currentY;
+        } else if ((waypoint & 4) !== 0) {
+            --currentY;
+        }
+    }
+}
+var plPathQueuePos;
+var plShortestDistances;
+var plWayPoints;
+var plPathQueueX;
+var plPathQueueY;
+
+var plIsDancing;
 
 //{ Map - m
 
