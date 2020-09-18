@@ -82,6 +82,10 @@ function simDraw() {
 }
 
 function simTick() {
+    for (let i = 1; i <  daPlayers.length; i++) {
+        plDestFindById(i);
+        plPathFindById(i);
+    }
     for (let i = 0; i < daPlayers.length; ++i) {
         daPlayers[i].tick();
     }
@@ -117,7 +121,7 @@ function daDrawPlayers() {
 function daInit() {
     daPlayers = [];
     for (let i = 0; i < simNumPlayersInput.value; i++) {
-        daPlayers.push(new plPlayer(20 + i, 20, daPlayers.length));
+        daPlayers.push(new plPlayer(20 + i, 20, daPlayers.length, "w"));
     }
     plIsDancing = false;
     plIsRunning = false;
@@ -137,19 +141,61 @@ var daBackColor;
 
 //{ Player - pl
 
-function plPlayer(x, y, id) {
+function plPlayer(x, y, id, orientation) {
     this.x = x;
     this.y = y;
     this.id = id;
+    this.orientation = orientation; // n, s, e, w, nw, ne, nw, ne
+
+    this.pathQueuePos = 0;
+    this.shortestDistances = [];
+    this.wayPoints = [];
+    this.pathQueueX = [];
+    this.pathQueueY = [];
+
+    this.destX = x;
+    this.destY = y;
 
     this.tick = function() {
-        if (this.id === 0) { // if dance leader, then move to destination tile
+        var oldX = this.x;
+        var oldY = this.y;
+
+        if (!plIsDancing && (this.id === 0)) { // if dance leader, then move to destination tile
             if (plPathQueuePos > 0) {
                 this.x = plPathQueueX[--plPathQueuePos];
                 this.y = plPathQueueY[plPathQueuePos];
-                if (plIsRunning && plPathQueuePos > 0) {
+                if (plIsRunning && plPathQueuePos > 0) { // TODO: update orientation correctly when running
                     this.x = plPathQueueX[--plPathQueuePos];
                     this.y = plPathQueueY[plPathQueuePos];
+                }
+            }
+
+            var oldOrientation = this.orientation;
+
+            this.orientation = "";
+
+            if (oldY < this.y) {
+                this.orientation += "n";
+            } else if (oldY > this.y) {
+                this.orientation += "s";
+            }
+
+            if (oldX < this.x) {
+                this.orientation += "e";
+            } else if (oldX > this.x) {
+                this.orientation += "w";
+            }
+
+            if (this.orientation === "") {
+                this.orientation = oldOrientation;
+            }
+        } else if (this.id === 1) {
+            if (this.pathQueuePos > 0) {
+                this.x = this.pathQueueX[--this.pathQueuePos];
+                this.y = this.pathQueueY[this.pathQueuePos];
+                if (plIsRunning && this.pathQueuePos > 0) { // TODO: update orientation correctly when running
+                    this.x = this.pathQueueX[--this.pathQueuePos];
+                    this.y = this.pathQueueY[this.pathQueuePos];
                 }
             }
         } else { // if not dance leader, then follow the preceding player
@@ -164,6 +210,176 @@ function plInit() {
     plPathQueueY = [];
     plShortestDistances = [];
     plWayPoints = [];
+}
+
+function plDestFindById(id) {
+    var leaderOrientation = daPlayers[id - 1].orientation;
+    var leaderX = daPlayers[id - 1].x;
+    var leaderY = daPlayers[id - 1].y;
+    var destX = leaderX;
+    var destY = leaderY;
+
+    console.log(leaderOrientation);
+
+    if (leaderOrientation.charAt[0] === "n") {
+        destY = leaderY - 1;
+        leaderOrientation = leaderOrientation.substring(1);
+    } else if (leaderOrientation.charAt[0] === "s") {
+        destY = leaderY + 1;
+        leaderOrientation = leaderOrientation.substring(1);
+    }
+    if (leaderOrientation.length > 0) {
+        if (leaderOrientation === "w") {
+            destX = leaderX + 1;
+        } else { // else east
+            destX = leaderX - 1;
+        }
+    }
+
+    daPlayers[id].destX = destX;
+    daPlayers[id].destY = destY;
+}
+
+function plPathFindById(id) {
+    var thisPlayer = daPlayers[id];
+
+    var destX = thisPlayer.destX;
+    var destY = thisPlayer.destY;
+
+    for (let i = 0; i < mWidthTiles*mHeightTiles; ++i) {
+        thisPlayer.shortestDistances[i] = 99999999;
+        thisPlayer.wayPoints[i] = 0;
+    }
+    thisPlayer.wayPoints[thisPlayer.x + thisPlayer.y*mWidthTiles] = 99;
+    thisPlayer.shortestDistances[thisPlayer.x + thisPlayer.y*mWidthTiles] = 0;
+    thisPlayer.pathQueuePos = 0;
+    let pathQueueEnd = 0;
+    thisPlayer.pathQueueX[pathQueueEnd] = thisPlayer.x;
+    thisPlayer.pathQueueY[pathQueueEnd++] = thisPlayer.y;
+    let currentX;
+    let currentY;
+    let foundDestination = false;
+    while (thisPlayer.pathQueuePos !== pathQueueEnd) {
+        currentX = thisPlayer.pathQueueX[thisPlayer.pathQueuePos];
+        currentY = thisPlayer.pathQueueY[thisPlayer.pathQueuePos++];
+        if (currentX === destX && currentY === destY) {
+            foundDestination = true;
+            break;
+        }
+        let newDistance = thisPlayer.shortestDistances[currentX + currentY*mWidthTiles] + 1;
+        let index = currentX - 1 + currentY*mWidthTiles;
+        if (currentX > 0 && thisPlayer.wayPoints[index] === 0 && (mCurrentMap[index] & 19136776) === 0) {
+            thisPlayer.pathQueueX[pathQueueEnd] = currentX - 1;
+            thisPlayer.pathQueueY[pathQueueEnd++] = currentY;
+            thisPlayer.wayPoints[index] = 2;
+            thisPlayer.shortestDistances[index] = newDistance;
+        }
+        index = currentX + 1 + currentY*mWidthTiles;
+        if (currentX < mWidthTiles - 1 && thisPlayer.wayPoints[index] === 0 && (mCurrentMap[index] & 19136896) === 0) {
+            thisPlayer.pathQueueX[pathQueueEnd] = currentX + 1;
+            thisPlayer.pathQueueY[pathQueueEnd++] = currentY;
+            thisPlayer.wayPoints[index] = 8;
+            thisPlayer.shortestDistances[index] = newDistance;
+        }
+        index = currentX + (currentY - 1)*mWidthTiles;
+        if (currentY > 0 && thisPlayer.wayPoints[index] === 0 && (mCurrentMap[index] & 19136770) === 0) {
+            thisPlayer.pathQueueX[pathQueueEnd] = currentX;
+            thisPlayer.pathQueueY[pathQueueEnd++] = currentY - 1;
+            thisPlayer.wayPoints[index] = 1;
+            thisPlayer.shortestDistances[index] = newDistance;
+        }
+        index = currentX + (currentY + 1)*mWidthTiles;
+        if (currentY < mHeightTiles - 1 && thisPlayer.wayPoints[index] === 0 && (mCurrentMap[index] & 19136800) === 0) {
+            thisPlayer.pathQueueX[pathQueueEnd] = currentX;
+            thisPlayer.pathQueueY[pathQueueEnd++] = currentY + 1;
+            thisPlayer.wayPoints[index] = 4;
+            thisPlayer.shortestDistances[index] = newDistance;
+        }
+        index = currentX - 1 + (currentY - 1)*mWidthTiles;
+        if (currentX > 0 && currentY > 0 && thisPlayer.wayPoints[index] === 0 &&
+            (mCurrentMap[index] & 19136782) == 0 &&
+            (mCurrentMap[currentX - 1 + currentY*mWidthTiles] & 19136776) === 0 &&
+            (mCurrentMap[currentX + (currentY - 1)*mWidthTiles] & 19136770) === 0) {
+            thisPlayer.pathQueueX[pathQueueEnd] = currentX - 1;
+            thisPlayer.pathQueueY[pathQueueEnd++] = currentY - 1;
+            thisPlayer.wayPoints[index] = 3;
+            thisPlayer.shortestDistances[index] = newDistance;
+        }
+        index = currentX + 1 + (currentY - 1)*mWidthTiles;
+        if (currentX < mWidthTiles - 1 && currentY > 0 && thisPlayer.wayPoints[index] === 0 &&
+            (mCurrentMap[index] & 19136899) == 0 &&
+            (mCurrentMap[currentX + 1 + currentY*mWidthTiles] & 19136896) === 0 &&
+            (mCurrentMap[currentX + (currentY - 1)*mWidthTiles] & 19136770) === 0) {
+            thisPlayer.pathQueueX[pathQueueEnd] = currentX + 1;
+            thisPlayer.pathQueueY[pathQueueEnd++] = currentY - 1;
+            thisPlayer.wayPoints[index] = 9;
+            thisPlayer.shortestDistances[index] = newDistance;
+        }
+        index = currentX - 1 + (currentY + 1)*mWidthTiles;
+        if (currentX > 0 && currentY < mHeightTiles - 1 && thisPlayer.wayPoints[index] === 0 &&
+            (mCurrentMap[index] & 19136824) == 0 &&
+            (mCurrentMap[currentX - 1 + currentY*mWidthTiles] & 19136776) === 0 &&
+            (mCurrentMap[currentX + (currentY + 1)*mWidthTiles] & 19136800) === 0) {
+            thisPlayer.pathQueueX[pathQueueEnd] = currentX - 1;
+            thisPlayer.pathQueueY[pathQueueEnd++] = currentY + 1;
+            thisPlayer.wayPoints[index] = 6;
+            thisPlayer.shortestDistances[index] = newDistance;
+        }
+        index = currentX + 1 + (currentY + 1)*mWidthTiles;
+        if (currentX < mWidthTiles - 1 && currentY < mHeightTiles - 1 && thisPlayer.wayPoints[index] === 0 &&
+            (mCurrentMap[index] & 19136992) == 0 &&
+            (mCurrentMap[currentX + 1 + currentY*mWidthTiles] & 19136896) === 0 &&
+            (mCurrentMap[currentX + (currentY + 1)*mWidthTiles] & 19136800) === 0) {
+            thisPlayer.pathQueueX[pathQueueEnd] = currentX + 1;
+            thisPlayer.pathQueueY[pathQueueEnd++] = currentY + 1;
+            thisPlayer.wayPoints[index] = 12;
+            thisPlayer.shortestDistances[index] = newDistance;
+        }
+    }
+    if (!foundDestination) {
+        let bestDistanceStart = 0x7FFFFFFF;
+        let bestDistanceEnd = 0x7FFFFFFF;
+        let deviation = 10;
+        for (let x = destX - deviation; x <= destX + deviation; ++x) {
+            for (let y = destY - deviation; y <= destY + deviation; ++y) {
+                if (x >= 0 && y >= 0 && x < mWidthTiles && y < mHeightTiles) {
+                    let distanceStart = thisPlayer.shortestDistances[x + y*mWidthTiles];
+                    if (distanceStart < 100) {
+                        let dx = Math.max(destX - x);
+                        let dy = Math.max(destY - y);
+                        let distanceEnd = dx*dx + dy*dy;
+                        if (distanceEnd < bestDistanceEnd || (distanceEnd === bestDistanceEnd && distanceStart < bestDistanceStart)) {
+                            bestDistanceStart = distanceStart;
+                            bestDistanceEnd = distanceEnd;
+                            currentX = x;
+                            currentY = y;
+                            foundDestination = true;
+                        }
+                    }
+                }
+            }
+        }
+        if (!foundDestination) {
+            thisPlayer.pathQueuePos = 0;
+            return;
+        }
+    }
+    thisPlayer.pathQueuePos = 0;
+    while (currentX !== thisPlayer.x || currentY !== thisPlayer.y) {
+        let waypoint = thisPlayer.wayPoints[currentX + currentY*mWidthTiles];
+        thisPlayer.pathQueueX[thisPlayer.pathQueuePos] = currentX;
+        thisPlayer.pathQueueY[thisPlayer.pathQueuePos++] = currentY;
+        if ((waypoint & 2) !== 0) {
+            ++currentX;
+        } else if ((waypoint & 8) !== 0) {
+            --currentX;
+        }
+        if ((waypoint & 1) !== 0) {
+            ++currentY;
+        } else if ((waypoint & 4) !== 0) {
+            --currentY;
+        }
+    }
 }
 
 function plPathfind(destX, destY) {
