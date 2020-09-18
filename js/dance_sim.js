@@ -106,9 +106,6 @@ var simStartStopButton;
 //{ DanceArena - da
 
 function daDrawPlayers() {
-    rSetDrawColor((daLeadColor >> 16) & 255, (daLeadColor >> 8) & 255, daLeadColor & 255, 255);
-    rrFill(daPlayers[0].x, daPlayers[0].y);
-
     rSetDrawColor((daMiddleColor >> 16) & 255, (daMiddleColor >> 8) & 255, daMiddleColor & 255, 255);
     for (let i = 1; i < daPlayers.length - 1; ++i) {
         rrFill(daPlayers[i].x, daPlayers[i].y);
@@ -116,6 +113,9 @@ function daDrawPlayers() {
 
     rSetDrawColor((daBackColor >> 16) & 255, (daBackColor >> 8) & 255, daBackColor & 255, 255);
     rrFill(daPlayers[daPlayers.length - 1].x, daPlayers[daPlayers.length - 1].y);
+
+    rSetDrawColor((daLeadColor >> 16) & 255, (daLeadColor >> 8) & 255, daLeadColor & 255, 255);
+    rrFill(daPlayers[0].x, daPlayers[0].y);
 }
 
 function daInit() {
