@@ -81,6 +81,7 @@ function simCanvasOnMouseDown(e) {
         }
     } else if (e.button === 2) {
         plIsDancing = true;
+        clearInterval(simTickTimerId);
         simTickTimerId = setInterval(simTick, Number(simTickDurationInput.value)); // tick time in milliseconds (set to 600 for real)
     }
 }
