@@ -23,15 +23,15 @@ function simInit() {
     simToggleTickPerClick.onchange = simToggleTickPerClickOnChange;
     simStartStopButton = document.getElementById(HTML_START_BUTTON);
     simStartStopButton.onclick = simStartStopButtonOnClick;
-    rInit(canvas, 64*12, 48*12);
+    rInit(canvas, 128*12, 48*12);
     rrInit(12);
 
     var mOPEN_MAP = [];
-    for (let i = 0; i < 3072; i++) {
+    for (let i = 0; i < 6144; i++) {
         mOPEN_MAP.push(0);
     }
 
-    mInit(mOPEN_MAP, 64, 48);
+    mInit(mOPEN_MAP, 128, 48);
 
     simReset();
 
