@@ -888,9 +888,7 @@ function decreaseSize() {
 }
 
 function setTileSize(size) {
-    if (!simIsRunning) {
-        rResizeCanvas(size * 128, size * 48);
-        rrSetTileSize(size);
-        simDraw();
-    }
+    rResizeCanvas(size * 128, size * 48);
+    rrSetTileSize(size);
+    simDraw();
 }
