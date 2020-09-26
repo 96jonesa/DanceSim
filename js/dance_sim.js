@@ -876,3 +876,21 @@ var rDrawColorG;
 var rDrawColorA;
 
 //}
+
+function increaseSize() {
+    setTileSize(rrTileSize + 1);
+}
+
+function decreaseSize() {
+    if (rrTileSize > 1) {
+        setTileSize(rrTileSize - 1);
+    }
+}
+
+function setTileSize(size) {
+    if (!simIsRunning) {
+        rResizeCanvas(size * 128, size * 48);
+        rrSetTileSize(size);
+        simDraw();
+    }
+}
