@@ -2,7 +2,16 @@
 const HTML_CANVAS = "dancesimcanvas";
 const HTML_TICK_DURATION = "tickduration";
 const HTML_START_BUTTON = "simstart";
+const HTML_NUM_GROUPS = "numgroups";
 const HTML_NUM_PLAYERS = "numplayers";
+const HTML_NUM_PLAYERS2 = "numplayers2";
+const HTML_NUM_PLAYERS3 = "numplayers3";
+const HTML_NUM_PLAYERS4 = "numplayers4";
+const HTML_NUM_PLAYERS5 = "numplayers5";
+const HTML_NUM_PLAYERS6 = "numplayers6";
+const HTML_NUM_PLAYERS7 = "numplayers7";
+const HTML_NUM_PLAYERS8 = "numplayers8";
+const HTML_NUM_PLAYERS9 = "numplayers9";
 const HTML_LEAD_COLOR = "lead";
 const HTML_MIDDLE_COLOR = "middle";
 const HTML_BACK_COLOR = "back";
@@ -15,7 +24,16 @@ window.onload = simInit;
 function simInit() {
     let canvas = document.getElementById(HTML_CANVAS);
     simTickDurationInput = document.getElementById(HTML_TICK_DURATION);
+    simNumGroupsInput = document.getElementById(HTML_NUM_GROUPS);
     simNumPlayersInput = document.getElementById(HTML_NUM_PLAYERS);
+    simNumPlayers2Input = document.getElementById(HTML_NUM_PLAYERS2);
+    simNumPlayers3Input = document.getElementById(HTML_NUM_PLAYERS3);
+    simNumPlayers4Input = document.getElementById(HTML_NUM_PLAYERS4);
+    simNumPlayers5Input = document.getElementById(HTML_NUM_PLAYERS5);
+    simNumPlayers6Input = document.getElementById(HTML_NUM_PLAYERS6);
+    simNumPlayers7Input = document.getElementById(HTML_NUM_PLAYERS7);
+    simNumPlayers8Input = document.getElementById(HTML_NUM_PLAYERS8);
+    simNumPlayers9Input = document.getElementById(HTML_NUM_PLAYERS9);
     simLeadColorInput = document.getElementById(HTML_LEAD_COLOR);
     simMiddleColorInput = document.getElementById(HTML_MIDDLE_COLOR);
     simBackColorInput = document.getElementById(HTML_BACK_COLOR);
@@ -31,10 +49,14 @@ function simInit() {
         mOPEN_MAP.push(0);
     }
 
+    simCurrentGroup = 0;
+    numGroups = simNumGroupsInput.value;
+
     mInit(mOPEN_MAP, 128, 48);
 
     simReset();
 
+    window.onkeydown = simWindowOnKeyDown;
     canvas.onmousedown = simCanvasOnMouseDown;
     canvas.oncontextmenu = function (e) { // prevent context menu from opening when right-clicking
         e.preventDefault();
@@ -59,6 +81,7 @@ function simStartStopButtonOnClick() {
     } else {
         simIsRunning = true;
         simStartStopButton.innerHTML = "Stop Sim";
+        numGroups = simNumGroupsInput.value;
         daInit();
         plInit();
         if (!simTickPerClick) {
@@ -68,22 +91,40 @@ function simStartStopButtonOnClick() {
     }
 }
 
+function simWindowOnKeyDown(e) {
+    if (simIsRunning) {
+        if ((e.key === "1") || (e.key === "2") || (e.key === "3") || (e.key === "4") || (e.key === "5") || (e.key === "6") || (e.key === "7") || (e.key === "8") || (e.key === "9") )
+        if (Number(e.key) <= numGroups) {
+            simCurrentGroup = Number(e.key) - 1;
+        }
+    }
+    if (e.key === " ") {
+        simStartStopButtonOnClick();
+        e.preventDefault();
+    }
+}
+
 function simCanvasOnMouseDown(e) {
     var canvasRect = rCanvas.getBoundingClientRect();
     let xTile = Math.trunc((e.clientX - canvasRect.left) / rrTileSize);
     let yTile = Math.trunc((canvasRect.bottom - 1 - e.clientY) / rrTileSize);
     if (e.button === 0) {
-        plPathfind(xTile, yTile);
-        plIsDancing = false;
+        plPathfind(xTile, yTile, simCurrentGroup);
+        plIsDancing[simCurrentGroup] = false;
+
+        console.log("dance worked");
+
         if (simTickPerClick) {
             clearInterval(simTickTimerId);
             simTick();
         }
     } else if (e.button === 2) {
-        plIsDancing = true;
+        plIsDancing[simCurrentGroup] = true;
         clearInterval(simTickTimerId);
         simTickTimerId = setInterval(simTick, Number(simTickDurationInput.value)); // tick time in milliseconds (set to 600 for real)
     }
+
+    console.log("mouse worked");
 }
 
 function simDraw() {
@@ -94,19 +135,35 @@ function simDraw() {
 }
 
 function simTick() {
-    for (let i = 0; i <  daPlayers.length; i++) {
-        plDestFindById(i);
-        plPathFindById(i);
+    for (let j = 0; j < numGroups; j++) {
+        var daPlayers = daGroups[j];
+
+        for (let i = 0; i < daPlayers.length; i++) {
+            plDestFindById(i, j);
+            plPathFindById(i, j);
+        }
+        for (let i = 0; i < daPlayers.length; ++i) {
+            daPlayers[i].tick();
+        }
     }
-    for (let i = 0; i < daPlayers.length; ++i) {
-        daPlayers[i].tick();
-    }
+
+    console.log("pre-draw worked");
+
     simDraw();
 }
 
 var simIsRunning;
 var simTickDurationInput;
+var simNumGroupsInput;
 var simNumPlayersInput;
+var simNumPlayers2Input;
+var simNumPlayers3Input;
+var simNumPlayers4Input;
+var simNumPlayers5Input;
+var simNumPlayers6Input;
+var simNumPlayers7Input;
+var simNumPlayers8Input;
+var simNumPlayers9Input;
 var simLeadColorInput;
 var simMiddleColorInput;
 var simBackColorInput;
@@ -115,6 +172,8 @@ var simTickTimerId;
 var simStartStopButton;
 
 var simTickPerClick;
+
+var simCurrentGroup;
 
 function simToggleTickPerClickOnChange(e) {
     simTickPerClick = (simToggleTickPerClick.value === "yes") ? true : false;
@@ -126,31 +185,62 @@ function simToggleTickPerClickOnChange(e) {
 
 function daDrawPlayers() {
     rSetDrawColor((daMiddleColor >> 16) & 255, (daMiddleColor >> 8) & 255, daMiddleColor & 255, 255);
-    for (let i = 1; i < daPlayers.length - 1; ++i) {
-        rrFill(daPlayers[i].x, daPlayers[i].y);
+    for (let j = 0; j < numGroups; j++) {
+        var daPlayers = daGroups[j];
+        for (let i = 1; i < daPlayers.length - 1; ++i) {
+            rrFill(daPlayers[i].x, daPlayers[i].y);
+        }
     }
 
     rSetDrawColor((daBackColor >> 16) & 255, (daBackColor >> 8) & 255, daBackColor & 255, 255);
-    rrFill(daPlayers[daPlayers.length - 1].x, daPlayers[daPlayers.length - 1].y);
+    for (let j = 0; j < numGroups; j++) {
+        var daPlayers = daGroups[j];
+        rrFill(daPlayers[daPlayers.length - 1].x, daPlayers[daPlayers.length - 1].y);
+    }
 
     rSetDrawColor((daLeadColor >> 16) & 255, (daLeadColor >> 8) & 255, daLeadColor & 255, 255);
-    rrFill(daPlayers[0].x, daPlayers[0].y);
+    for (let j = 0; j < numGroups; j++) {
+        var daPlayers = daGroups[j];
+        rrFill(daPlayers[0].x, daPlayers[0].y);
+    }
 }
 
 function daInit() {
-    daPlayers = [];
-    for (let i = 0; i < simNumPlayersInput.value; i++) {
-        daPlayers.push(new plPlayer(20 + i, 20, daPlayers.length, "w"));
+    numGroups = simNumGroupsInput.value;
+    daGroups = [];
+
+    plIsDancing = [false, false, false, false, false, false, false, false, false];
+    plIsRunning = [false, false, false, false, false, false, false, false, false];
+
+    simNumPlayersList = [];
+    simNumPlayersList.push(simNumPlayersInput.value);
+    simNumPlayersList.push(simNumPlayers2Input.value);
+    simNumPlayersList.push(simNumPlayers3Input.value);
+    simNumPlayersList.push(simNumPlayers4Input.value);
+    simNumPlayersList.push(simNumPlayers5Input.value);
+    simNumPlayersList.push(simNumPlayers6Input.value);
+    simNumPlayersList.push(simNumPlayers7Input.value);
+    simNumPlayersList.push(simNumPlayers8Input.value);
+    simNumPlayersList.push(simNumPlayers9Input.value);
+
+    for (let i = 0; i < numGroups; i++) {
+        var daPlayers = [];
+        for (let j = 0; j < simNumPlayersList[j]; j++) {
+            daPlayers.push(new plPlayer(20 + j, 20 + i * 2, daPlayers.length, "w", i));
+        }
+        daGroups.push(daPlayers);
     }
-    plIsDancing = false;
-    plIsRunning = false;
 
     daLeadColor = Number("0x" + simLeadColorInput.value.substring(1));
     daMiddleColor = Number("0x" + simMiddleColorInput.value.substring(1));
     daBackColor = Number("0x" + simBackColorInput.value.substring(1));
 }
 
-var daPlayers;
+//var daPlayers;
+
+var daGroups;
+
+var simNumPlayersList;
 
 var daLeadColor;
 var daMiddleColor;
@@ -160,10 +250,11 @@ var daBackColor;
 
 //{ Player - pl
 
-function plPlayer(x, y, id, orientation) {
+function plPlayer(x, y, id, orientation, group) {
     this.x = x;
     this.y = y;
     this.id = id;
+    this.group = group;
     this.orientation = orientation; // n, s, e, w, nw, ne, nw, ne
 
     this.pathQueuePos = 0;
@@ -179,13 +270,13 @@ function plPlayer(x, y, id, orientation) {
         var oldX = this.x;
         var oldY = this.y;
 
-        if (!plIsDancing && (this.id === 0)) { // if dance leader, then move to destination tile
-            if (plPathQueuePos > 0) {
-                this.x = plPathQueueX[--plPathQueuePos];
-                this.y = plPathQueueY[plPathQueuePos];
-                if (plIsRunning && plPathQueuePos > 0) { // TODO: update orientation correctly when running
-                    this.x = plPathQueueX[--plPathQueuePos];
-                    this.y = plPathQueueY[plPathQueuePos];
+        if (!plIsDancing[this.group] && (this.id === 0)) { // if dance leader, then move to destination tile
+            if (plPathQueuePos[this.group] > 0) {
+                this.x = plPathQueueX[this.group][--plPathQueuePos[this.group]];
+                this.y = plPathQueueY[this.group][plPathQueuePos[this.group]];
+                if (plIsRunning[this.group] && plPathQueuePos[this.group] > 0) { // TODO: update orientation correctly when running
+                    this.x = plPathQueueX[this.group][--plPathQueuePos[this.group]];
+                    this.y = plPathQueueY[this.group][plPathQueuePos[this.group]];
                 }
             }
 
@@ -243,14 +334,16 @@ function plPlayer(x, y, id, orientation) {
 }
 
 function plInit() {
-    plPathQueuePos = 0;
-    plPathQueueX = [];
-    plPathQueueY = [];
-    plShortestDistances = [];
-    plWayPoints = [];
+    plPathQueuePos = [0,0,0,0,0,0,0,0,0];
+    plPathQueueX = [[],[],[],[],[],[],[],[],[]];
+    plPathQueueY = [[],[],[],[],[],[],[],[],[]];
+    plShortestDistances = [[],[],[],[],[],[],[],[],[]];
+    plWayPoints = [[],[],[],[],[],[],[],[],[]];
 }
 
-function plDestFindById(id) {
+function plDestFindById(id, group) {
+    var daPlayers = daGroups[group];
+
     var leaderOrientation = daPlayers[(daPlayers.length + id - 1) % daPlayers.length].orientation;
     var leaderX = daPlayers[(daPlayers.length + id - 1) % daPlayers.length].x;
     var leaderY = daPlayers[(daPlayers.length + id - 1) % daPlayers.length].y;
@@ -283,7 +376,9 @@ function plDestFindById(id) {
     daPlayers[id].destY = destY;
 }
 
-function plPathFindById(id) {
+function plPathFindById(id, group) {
+    var daPlayers = daGroups[group];
+
     var thisPlayer = daPlayers[id];
 
     var destX = thisPlayer.destX;
@@ -425,97 +520,108 @@ function plPathFindById(id) {
     }
 }
 
-function plPathfind(destX, destY) {
+function plPathfind(destX, destY, group) {
+    var daPlayers = daGroups[group];
+    //console.log("found path");
+
     for (let i = 0; i < mWidthTiles*mHeightTiles; ++i) {
-        plShortestDistances[i] = 99999999;
-        plWayPoints[i] = 0;
+        plShortestDistances[group][i] = 99999999;
+        plWayPoints[group][i] = 0;
     }
-    plWayPoints[daPlayers[0].x + daPlayers[0].y*mWidthTiles] = 99;
-    plShortestDistances[daPlayers[0].x + daPlayers[0].y*mWidthTiles] = 0;
-    plPathQueuePos = 0;
+
+    //console.log("found path");
+
+    plWayPoints[group][daPlayers[0].x + daPlayers[0].y*mWidthTiles] = 99;
+    plShortestDistances[group][daPlayers[0].x + daPlayers[0].y*mWidthTiles] = 0;
+    plPathQueuePos[group] = 0;
     let pathQueueEnd = 0;
-    plPathQueueX[pathQueueEnd] = daPlayers[0].x;
-    plPathQueueY[pathQueueEnd++] = daPlayers[0].y;
+    plPathQueueX[group][pathQueueEnd] = daPlayers[0].x;
+    plPathQueueY[group][pathQueueEnd++] = daPlayers[0].y;
     let currentX;
     let currentY;
     let foundDestination = false;
-    while (plPathQueuePos !== pathQueueEnd) {
-        currentX = plPathQueueX[plPathQueuePos];
-        currentY = plPathQueueY[plPathQueuePos++];
+
+    //console.log("found path");
+
+    while (plPathQueuePos[group] !== pathQueueEnd) {
+        //console.log("found path");
+        currentX = plPathQueueX[group][plPathQueuePos[group]];
+        currentY = plPathQueueY[group][plPathQueuePos[group]++];
         if (currentX === destX && currentY === destY) {
             foundDestination = true;
             break;
         }
-        let newDistance = plShortestDistances[currentX + currentY*mWidthTiles] + 1;
+        let newDistance = plShortestDistances[group][currentX + currentY*mWidthTiles] + 1;
         let index = currentX - 1 + currentY*mWidthTiles;
-        if (currentX > 0 && plWayPoints[index] === 0 && (mCurrentMap[index] & 19136776) === 0) {
-            plPathQueueX[pathQueueEnd] = currentX - 1;
-            plPathQueueY[pathQueueEnd++] = currentY;
-            plWayPoints[index] = 2;
-            plShortestDistances[index] = newDistance;
+        if (currentX > 0 && plWayPoints[group][index] === 0 && (mCurrentMap[index] & 19136776) === 0) {
+            plPathQueueX[group][pathQueueEnd] = currentX - 1;
+            plPathQueueY[group][pathQueueEnd++] = currentY;
+            plWayPoints[group][index] = 2;
+            plShortestDistances[group][index] = newDistance;
         }
         index = currentX + 1 + currentY*mWidthTiles;
-        if (currentX < mWidthTiles - 1 && plWayPoints[index] === 0 && (mCurrentMap[index] & 19136896) === 0) {
-            plPathQueueX[pathQueueEnd] = currentX + 1;
-            plPathQueueY[pathQueueEnd++] = currentY;
-            plWayPoints[index] = 8;
-            plShortestDistances[index] = newDistance;
+        if (currentX < mWidthTiles - 1 && plWayPoints[group][index] === 0 && (mCurrentMap[index] & 19136896) === 0) {
+            plPathQueueX[group][pathQueueEnd] = currentX + 1;
+            plPathQueueY[group][pathQueueEnd++] = currentY;
+            plWayPoints[group][index] = 8;
+            plShortestDistances[group][index] = newDistance;
         }
         index = currentX + (currentY - 1)*mWidthTiles;
-        if (currentY > 0 && plWayPoints[index] === 0 && (mCurrentMap[index] & 19136770) === 0) {
-            plPathQueueX[pathQueueEnd] = currentX;
-            plPathQueueY[pathQueueEnd++] = currentY - 1;
-            plWayPoints[index] = 1;
-            plShortestDistances[index] = newDistance;
+        if (currentY > 0 && plWayPoints[group][index] === 0 && (mCurrentMap[index] & 19136770) === 0) {
+            plPathQueueX[group][pathQueueEnd] = currentX;
+            plPathQueueY[group][pathQueueEnd++] = currentY - 1;
+            plWayPoints[group][index] = 1;
+            plShortestDistances[group][index] = newDistance;
         }
         index = currentX + (currentY + 1)*mWidthTiles;
-        if (currentY < mHeightTiles - 1 && plWayPoints[index] === 0 && (mCurrentMap[index] & 19136800) === 0) {
-            plPathQueueX[pathQueueEnd] = currentX;
-            plPathQueueY[pathQueueEnd++] = currentY + 1;
-            plWayPoints[index] = 4;
-            plShortestDistances[index] = newDistance;
+        if (currentY < mHeightTiles - 1 && plWayPoints[group][index] === 0 && (mCurrentMap[index] & 19136800) === 0) {
+            plPathQueueX[group][pathQueueEnd] = currentX;
+            plPathQueueY[group][pathQueueEnd++] = currentY + 1;
+            plWayPoints[group][index] = 4;
+            plShortestDistances[group][index] = newDistance;
         }
         index = currentX - 1 + (currentY - 1)*mWidthTiles;
-        if (currentX > 0 && currentY > 0 && plWayPoints[index] === 0 &&
+        if (currentX > 0 && currentY > 0 && plWayPoints[group][index] === 0 &&
             (mCurrentMap[index] & 19136782) == 0 &&
             (mCurrentMap[currentX - 1 + currentY*mWidthTiles] & 19136776) === 0 &&
             (mCurrentMap[currentX + (currentY - 1)*mWidthTiles] & 19136770) === 0) {
-            plPathQueueX[pathQueueEnd] = currentX - 1;
-            plPathQueueY[pathQueueEnd++] = currentY - 1;
-            plWayPoints[index] = 3;
-            plShortestDistances[index] = newDistance;
+            plPathQueueX[group][pathQueueEnd] = currentX - 1;
+            plPathQueueY[group][pathQueueEnd++] = currentY - 1;
+            plWayPoints[group][index] = 3;
+            plShortestDistances[group][index] = newDistance;
         }
         index = currentX + 1 + (currentY - 1)*mWidthTiles;
-        if (currentX < mWidthTiles - 1 && currentY > 0 && plWayPoints[index] === 0 &&
+        if (currentX < mWidthTiles - 1 && currentY > 0 && plWayPoints[group][index] === 0 &&
             (mCurrentMap[index] & 19136899) == 0 &&
             (mCurrentMap[currentX + 1 + currentY*mWidthTiles] & 19136896) === 0 &&
             (mCurrentMap[currentX + (currentY - 1)*mWidthTiles] & 19136770) === 0) {
-            plPathQueueX[pathQueueEnd] = currentX + 1;
-            plPathQueueY[pathQueueEnd++] = currentY - 1;
-            plWayPoints[index] = 9;
-            plShortestDistances[index] = newDistance;
+            plPathQueueX[group][pathQueueEnd] = currentX + 1;
+            plPathQueueY[group][pathQueueEnd++] = currentY - 1;
+            plWayPoints[group][index] = 9;
+            plShortestDistances[group][index] = newDistance;
         }
         index = currentX - 1 + (currentY + 1)*mWidthTiles;
-        if (currentX > 0 && currentY < mHeightTiles - 1 && plWayPoints[index] === 0 &&
+        if (currentX > 0 && currentY < mHeightTiles - 1 && plWayPoints[group][index] === 0 &&
             (mCurrentMap[index] & 19136824) == 0 &&
             (mCurrentMap[currentX - 1 + currentY*mWidthTiles] & 19136776) === 0 &&
             (mCurrentMap[currentX + (currentY + 1)*mWidthTiles] & 19136800) === 0) {
-            plPathQueueX[pathQueueEnd] = currentX - 1;
-            plPathQueueY[pathQueueEnd++] = currentY + 1;
-            plWayPoints[index] = 6;
-            plShortestDistances[index] = newDistance;
+            plPathQueueX[group][pathQueueEnd] = currentX - 1;
+            plPathQueueY[group][pathQueueEnd++] = currentY + 1;
+            plWayPoints[group][index] = 6;
+            plShortestDistances[group][index] = newDistance;
         }
         index = currentX + 1 + (currentY + 1)*mWidthTiles;
-        if (currentX < mWidthTiles - 1 && currentY < mHeightTiles - 1 && plWayPoints[index] === 0 &&
+        if (currentX < mWidthTiles - 1 && currentY < mHeightTiles - 1 && plWayPoints[group][index] === 0 &&
             (mCurrentMap[index] & 19136992) == 0 &&
             (mCurrentMap[currentX + 1 + currentY*mWidthTiles] & 19136896) === 0 &&
             (mCurrentMap[currentX + (currentY + 1)*mWidthTiles] & 19136800) === 0) {
-            plPathQueueX[pathQueueEnd] = currentX + 1;
-            plPathQueueY[pathQueueEnd++] = currentY + 1;
-            plWayPoints[index] = 12;
-            plShortestDistances[index] = newDistance;
+            plPathQueueX[group][pathQueueEnd] = currentX + 1;
+            plPathQueueY[group][pathQueueEnd++] = currentY + 1;
+            plWayPoints[group][index] = 12;
+            plShortestDistances[group][index] = newDistance;
         }
     }
+
     if (!foundDestination) {
         let bestDistanceStart = 0x7FFFFFFF;
         let bestDistanceEnd = 0x7FFFFFFF;
@@ -523,7 +629,7 @@ function plPathfind(destX, destY) {
         for (let x = destX - deviation; x <= destX + deviation; ++x) {
             for (let y = destY - deviation; y <= destY + deviation; ++y) {
                 if (x >= 0 && y >= 0 && x < mWidthTiles && y < mHeightTiles) {
-                    let distanceStart = plShortestDistances[x + y*mWidthTiles];
+                    let distanceStart = plShortestDistances[group][x + y*mWidthTiles];
                     if (distanceStart < 100) {
                         let dx = Math.max(destX - x);
                         let dy = Math.max(destY - y);
@@ -540,15 +646,15 @@ function plPathfind(destX, destY) {
             }
         }
         if (!foundDestination) {
-            plPathQueuePos = 0;
+            plPathQueuePos[group] = 0;
             return;
         }
     }
-    plPathQueuePos = 0;
+    plPathQueuePos[group] = 0;
     while (currentX !== daPlayers[0].x || currentY !== daPlayers[0].y) {
-        let waypoint = plWayPoints[currentX + currentY*mWidthTiles];
-        plPathQueueX[plPathQueuePos] = currentX;
-        plPathQueueY[plPathQueuePos++] = currentY;
+        let waypoint = plWayPoints[group][currentX + currentY*mWidthTiles];
+        plPathQueueX[group][plPathQueuePos[group]] = currentX;
+        plPathQueueY[group][plPathQueuePos[group]++] = currentY;
         if ((waypoint & 2) !== 0) {
             ++currentX;
         } else if ((waypoint & 8) !== 0) {
@@ -560,6 +666,8 @@ function plPathfind(destX, destY) {
             --currentY;
         }
     }
+
+    console.log("found path");
 }
 var plPathQueuePos;
 var plShortestDistances;
@@ -892,3 +1000,16 @@ function setTileSize(size) {
     rrSetTileSize(size);
     simDraw();
 }
+
+function setCanvasWidth(width) {
+    canvasWidth = width;
+}
+
+function setCanvasHeight(height) {
+    canvasHeight = height;
+}
+
+var canvasWidth;
+var canvasHeight;
+
+var numGroups;
