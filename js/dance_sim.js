@@ -225,7 +225,7 @@ function daInit() {
 
     for (let i = 0; i < numGroups; i++) {
         var daPlayers = [];
-        for (let j = 0; j < simNumPlayersList[j]; j++) {
+        for (let j = 0; j < simNumPlayersList[i]; j++) {
             daPlayers.push(new plPlayer(20 + j, 20 + i * 2, daPlayers.length, "w", i));
         }
         daGroups.push(daPlayers);
