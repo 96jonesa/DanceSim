@@ -15,6 +15,7 @@ const HTML_NUM_PLAYERS9 = "numplayers9";
 const HTML_LEAD_COLOR = "lead";
 const HTML_MIDDLE_COLOR = "middle";
 const HTML_BACK_COLOR = "back";
+const HTML_ALTERNATE_COLOR = "alternate";
 const HTML_TOGGLE_TICK_PER_CLICK = "tickperclick";
 
 window.onload = simInit;
@@ -37,22 +38,23 @@ function simInit() {
     simLeadColorInput = document.getElementById(HTML_LEAD_COLOR);
     simMiddleColorInput = document.getElementById(HTML_MIDDLE_COLOR);
     simBackColorInput = document.getElementById(HTML_BACK_COLOR);
+    simAlternateColorInput = document.getElementById(HTML_ALTERNATE_COLOR);
     simToggleTickPerClick = document.getElementById(HTML_TOGGLE_TICK_PER_CLICK);
     simToggleTickPerClick.onchange = simToggleTickPerClickOnChange;
     simStartStopButton = document.getElementById(HTML_START_BUTTON);
     simStartStopButton.onclick = simStartStopButtonOnClick;
-    rInit(canvas, 128*12, 48*12);
+    rInit(canvas, 128*12, 100*12);
     rrInit(12);
 
     var mOPEN_MAP = [];
-    for (let i = 0; i < 6144; i++) {
+    for (let i = 0; i < 12800; i++) {
         mOPEN_MAP.push(0);
     }
 
     simCurrentGroup = 0;
     numGroups = simNumGroupsInput.value;
 
-    mInit(mOPEN_MAP, 128, 48);
+    mInit(mOPEN_MAP, 128, 100);
 
     simReset();
 
@@ -167,6 +169,7 @@ var simNumPlayers9Input;
 var simLeadColorInput;
 var simMiddleColorInput;
 var simBackColorInput;
+var simAlternateColorInput;
 var simToggleTickPerClick;
 var simTickTimerId;
 var simStartStopButton;
@@ -188,7 +191,19 @@ function daDrawPlayers() {
     for (let j = 0; j < numGroups; j++) {
         var daPlayers = daGroups[j];
         for (let i = 1; i < daPlayers.length - 1; ++i) {
-            rrFill(daPlayers[i].x, daPlayers[i].y);
+            if (i % 2 === 0) {
+                rrFill(daPlayers[i].x, daPlayers[i].y);
+            }
+        }
+    }
+
+    rSetDrawColor((daAlternateColor >> 16) & 255, (daAlternateColor >> 8) & 255, daAlternateColor & 255, 255);
+    for (let j = 0; j < numGroups; j++) {
+        var daPlayers = daGroups[j];
+        for (let i = 1; i < daPlayers.length - 1; ++i) {
+            if (i % 2 === 1) {
+                rrFill(daPlayers[i].x, daPlayers[i].y);
+            }
         }
     }
 
@@ -225,8 +240,13 @@ function daInit() {
 
     for (let i = 0; i < numGroups; i++) {
         var daPlayers = [];
-        for (let j = 0; j < simNumPlayersList[i]; j++) {
-            daPlayers.push(new plPlayer(20 + j, 20 + i * 2, daPlayers.length, "w", i));
+        daPlayers.push(new plPlayer(20, 80 + i * 2, daPlayers.length, "w", i));
+        for (let j = 1; j < simNumPlayersList[i]; j++) {
+            if (j % 2 === 1) {
+                daPlayers.push(new plPlayer(21, 80 + i * 2, daPlayers.length, "w", i));
+            } else {
+                daPlayers.push(new plPlayer(22, 80 + i * 2, daPlayers.length, "e", i));
+            }
         }
         daGroups.push(daPlayers);
     }
@@ -234,6 +254,7 @@ function daInit() {
     daLeadColor = Number("0x" + simLeadColorInput.value.substring(1));
     daMiddleColor = Number("0x" + simMiddleColorInput.value.substring(1));
     daBackColor = Number("0x" + simBackColorInput.value.substring(1));
+    daAlternateColor = Number("0x" + simAlternateColorInput.value.substring(1));
 }
 
 //var daPlayers;
@@ -246,6 +267,7 @@ var simNumPlayersList;
 var daLeadColor;
 var daMiddleColor;
 var daBackColor;
+var daAlternateColor;
 
 //}
 
@@ -997,7 +1019,7 @@ function decreaseSize() {
 }
 
 function setTileSize(size) {
-    rResizeCanvas(size * 128, size * 48);
+    rResizeCanvas(size * 128, size * 100);
     rrSetTileSize(size);
     simDraw();
 }

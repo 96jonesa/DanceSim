@@ -9,25 +9,28 @@ Tick only on move when not following: <select id="tickperclick">
 <button onclick="increaseSize()">Increase tile size</button>
 <button onclick="decreaseSize()">Decrease tile size</button><br>
 Number of groups to use: <input id="numgroups" type="number" min="1" max="9" value="1"/><br>
-Number of players in group 1: <input id="numplayers" type="number" min="2" max="100" value="3"/><br>
-Number of players in group 2: <input id="numplayers2" type="number" min="2" max="100" value="3"/><br>
-Number of players in group 3: <input id="numplayers3" type="number" min="2" max="100" value="3"/><br>
-Number of players in group 4: <input id="numplayers4" type="number" min="2" max="100" value="3"/><br>
-Number of players in group 5: <input id="numplayers5" type="number" min="2" max="100" value="3"/><br>
-Number of players in group 6: <input id="numplayers6" type="number" min="2" max="100" value="3"/><br>
-Number of players in group 7: <input id="numplayers7" type="number" min="2" max="100" value="3"/><br>
-Number of players in group 8: <input id="numplayers8" type="number" min="2" max="100" value="3"/><br>
-Number of players in group 9: <input id="numplayers9" type="number" min="2" max="100" value="3"/><br>
+Number of players in group 1: <input id="numplayers" type="number" min="2" max="2000" value="3"/><br>
+Number of players in group 2: <input id="numplayers2" type="number" min="2" max="2000" value="3"/><br>
+Number of players in group 3: <input id="numplayers3" type="number" min="2" max="2000" value="3"/><br>
+Number of players in group 4: <input id="numplayers4" type="number" min="2" max="2000" value="3"/><br>
+Number of players in group 5: <input id="numplayers5" type="number" min="2" max="2000" value="3"/><br>
+Number of players in group 6: <input id="numplayers6" type="number" min="2" max="2000" value="3"/><br>
+Number of players in group 7: <input id="numplayers7" type="number" min="2" max="2000" value="3"/><br>
+Number of players in group 8: <input id="numplayers8" type="number" min="2" max="2000" value="3"/><br>
+Number of players in group 9: <input id="numplayers9" type="number" min="2" max="2000" value="3"/><br>
 <input type="color" id="lead" name="lead" value="#ffffff"> Lead<br>
 <input type="color" id="middle" name="middle" value="#0000ff"> Middle<br>
+<input type="color" id="alternate" name="alternate" value="#0000ff"> Alternate<br>
 <input type="color" id="back" name="back" value="#ff0000"> Back<br>
 <button id="simstart"></button><br>
+<br><b>Scroll to bottom of page for instructions.</b><br><br>
 <canvas id="dancesimcanvas"></canvas><br>
 Select a number of players between 2 and 100, inclusive. Default is 3 players.<br>
 Select a tick duration between 100 and 2400 milliseconds, inclusive. Default is 600 ms.<br>
 Click the 'Start Sim' button to start the simulator with the given number of players and tick duration.<br>
 Click the 'Stop Sim' button to stop the simulator.<br>
 Click the colored rectangle beside 'Lead', 'Middle', and 'Back' to change the color of the lead, middle, and back players, respectively.<br>
+Click the colored rectangle beside 'Alternate' to change the color of every other (alternating) middle player.<br>
 Control the lead player by left-clicking on the desired destination tile.<br>
 The middle players will follow the lead player (one will follow the lead, then one will follow that one, and so on).<br>
 The back player will follow the last middle player.<br>
