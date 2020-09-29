@@ -237,6 +237,7 @@ function daInit() {
 }
 
 //var daPlayers;
+// hi
 
 var daGroups;
 
