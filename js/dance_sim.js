@@ -131,9 +131,11 @@ function simCanvasOnMouseDown(e) {
 }
 
 function startDancing() {
-    plIsDancing[simCurrentGroup] = true;
-    clearInterval(simTickTimerId);
-    simTickTimerId = setInterval(simTick, Number(simTickDurationInput.value)); // tick time in milliseconds (set to 600 for real)
+    if (simIsRunning) {
+        plIsDancing[simCurrentGroup] = true;
+        clearInterval(simTickTimerId);
+        simTickTimerId = setInterval(simTick, Number(simTickDurationInput.value)); // tick time in milliseconds (set to 600 for real)
+    }
 }
 
 function simDraw() {
