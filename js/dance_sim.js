@@ -121,12 +121,19 @@ function simCanvasOnMouseDown(e) {
             simTick();
         }
     } else if (e.button === 2) {
-        plIsDancing[simCurrentGroup] = true;
-        clearInterval(simTickTimerId);
-        simTickTimerId = setInterval(simTick, Number(simTickDurationInput.value)); // tick time in milliseconds (set to 600 for real)
+        startDancing();
+        //plIsDancing[simCurrentGroup] = true;
+        //clearInterval(simTickTimerId);
+        //simTickTimerId = setInterval(simTick, Number(simTickDurationInput.value)); // tick time in milliseconds (set to 600 for real)
     }
 
     console.log("mouse worked");
+}
+
+function startDancing() {
+    plIsDancing[simCurrentGroup] = true;
+    clearInterval(simTickTimerId);
+    simTickTimerId = setInterval(simTick, Number(simTickDurationInput.value)); // tick time in milliseconds (set to 600 for real)
 }
 
 function simDraw() {
