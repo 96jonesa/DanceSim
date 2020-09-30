@@ -22,6 +22,9 @@ window.onload = simInit;
 
 //{ Simulation - sim
 
+var simFramesPerTick;
+var simPlayersVisible;
+
 function simInit() {
     let canvas = document.getElementById(HTML_CANVAS);
     simTickDurationInput = document.getElementById(HTML_TICK_DURATION);
@@ -51,6 +54,9 @@ function simInit() {
         mOPEN_MAP.push(0);
     }
 
+    simFramesPerTick = 1;
+    simPlayersVisible = true;
+
     simCurrentGroup = 0;
     numGroups = simNumGroupsInput.value;
 
@@ -63,6 +69,10 @@ function simInit() {
     canvas.oncontextmenu = function (e) { // prevent context menu from opening when right-clicking
         e.preventDefault();
     };
+}
+
+function toggleVisibilityOfFollowers() {
+    simPlayersVisible = !simPlayersVisible;
 }
 
 function simReset() {
@@ -196,30 +206,32 @@ function simToggleTickPerClickOnChange(e) {
 //{ DanceArena - da
 
 function daDrawPlayers() {
-    rSetDrawColor((daMiddleColor >> 16) & 255, (daMiddleColor >> 8) & 255, daMiddleColor & 255, 255);
-    for (let j = 0; j < numGroups; j++) {
-        var daPlayers = daGroups[j];
-        for (let i = 1; i < daPlayers.length - 1; ++i) {
-            if (i % 2 === 0) {
-                rrFill(daPlayers[i].x, daPlayers[i].y);
+    if (simPlayersVisible) {
+        rSetDrawColor((daMiddleColor >> 16) & 255, (daMiddleColor >> 8) & 255, daMiddleColor & 255, 255);
+        for (let j = 0; j < numGroups; j++) {
+            var daPlayers = daGroups[j];
+            for (let i = 1; i < daPlayers.length - 1; ++i) {
+                if (i % 2 === 0) {
+                    rrFill(daPlayers[i].x, daPlayers[i].y);
+                }
             }
         }
-    }
 
-    rSetDrawColor((daAlternateColor >> 16) & 255, (daAlternateColor >> 8) & 255, daAlternateColor & 255, 255);
-    for (let j = 0; j < numGroups; j++) {
-        var daPlayers = daGroups[j];
-        for (let i = 1; i < daPlayers.length - 1; ++i) {
-            if (i % 2 === 1) {
-                rrFill(daPlayers[i].x, daPlayers[i].y);
+        rSetDrawColor((daAlternateColor >> 16) & 255, (daAlternateColor >> 8) & 255, daAlternateColor & 255, 255);
+        for (let j = 0; j < numGroups; j++) {
+            var daPlayers = daGroups[j];
+            for (let i = 1; i < daPlayers.length - 1; ++i) {
+                if (i % 2 === 1) {
+                    rrFill(daPlayers[i].x, daPlayers[i].y);
+                }
             }
         }
-    }
 
-    rSetDrawColor((daBackColor >> 16) & 255, (daBackColor >> 8) & 255, daBackColor & 255, 255);
-    for (let j = 0; j < numGroups; j++) {
-        var daPlayers = daGroups[j];
-        rrFill(daPlayers[daPlayers.length - 1].x, daPlayers[daPlayers.length - 1].y);
+        rSetDrawColor((daBackColor >> 16) & 255, (daBackColor >> 8) & 255, daBackColor & 255, 255);
+        for (let j = 0; j < numGroups; j++) {
+            var daPlayers = daGroups[j];
+            rrFill(daPlayers[daPlayers.length - 1].x, daPlayers[daPlayers.length - 1].y);
+        }
     }
 
     rSetDrawColor((daLeadColor >> 16) & 255, (daLeadColor >> 8) & 255, daLeadColor & 255, 255);
