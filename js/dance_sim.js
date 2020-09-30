@@ -20,6 +20,8 @@ const HTML_TOGGLE_TICK_PER_CLICK = "tickperclick";
 
 window.onload = simInit;
 
+var simFramesPerTick;
+
 //{ Simulation - sim
 
 function simInit() {
@@ -50,6 +52,8 @@ function simInit() {
     for (let i = 0; i < 12800; i++) {
         mOPEN_MAP.push(0);
     }
+
+    simFramesPerTick = 1;
 
     simCurrentGroup = 0;
     numGroups = simNumGroupsInput.value;
@@ -114,7 +118,7 @@ function simCanvasOnMouseDown(e) {
         plPathfind(xTile, yTile, simCurrentGroup);
         plIsDancing[simCurrentGroup] = false;
 
-        console.log("dance worked");
+        //console.log("dance worked");
 
         if (simTickPerClick) {
             clearInterval(simTickTimerId);
@@ -127,7 +131,7 @@ function simCanvasOnMouseDown(e) {
         //simTickTimerId = setInterval(simTick, Number(simTickDurationInput.value)); // tick time in milliseconds (set to 600 for real)
     }
 
-    console.log("mouse worked");
+    //console.log("mouse worked");
 }
 
 function startDancing() {
@@ -142,8 +146,30 @@ function simDraw() {
     mDrawMap();
     daDrawPlayers();
     mDrawGrid();
+
+    //rSetDrawColor((daMiddleColor >> 16) & 255, (daMiddleColor >> 8) & 255, daMiddleColor & 255, 255);
+    //rDrawFilledRect(20, 20, rrTileSize, rrTileSize);
+
     rPresent();
 }
+
+function simDrawIntermediate() {
+    mDrawMap();
+    daDrawPlayersIntermediate(subTick, numSubTicks);
+    mDrawGrid();
+    rPresent();
+
+    subTick++;
+
+    if (subTick > numSubTicks) {
+        clearInterval(subTickInterval);
+        console.log("clear");
+    }
+
+    console.log("hello");
+}
+
+var subTickInterval;
 
 function simTick() {
     for (let j = 0; j < numGroups; j++) {
@@ -159,9 +185,36 @@ function simTick() {
     }
 
     console.log("pre-draw worked");
+    //for (let i = 1.0; i < 3.5; i++) {
+    //    subTick = i;
+    //    numSubTicks = 3.0;
+    //    setTimeout(simDrawIntermediate, 600 * subTick / (numSubTicks + 1));
+    //}
+    //setTimeout(simDraw, 585);
 
-    simDraw();
+    subTick = 1.0;
+    numSubTicks = 20.0;
+
+    simDrawIntermediate();
+
+    subTickInterval = setInterval(simDrawIntermediate, 600 / numSubTicks);
+
+    //simDraw();
+
+    //simDraw()
 }
+
+function sleep(milliseconds) {
+    var start = new Date().getTime();
+    for (var i = 0; i < 1e7; i++) {
+        if ((new Date().getTime() - start) > milliseconds){
+            break;
+        }
+    }
+}
+
+var subTick;
+var numSubTicks;
 
 var simIsRunning;
 var simTickDurationInput;
@@ -226,6 +279,44 @@ function daDrawPlayers() {
     for (let j = 0; j < numGroups; j++) {
         var daPlayers = daGroups[j];
         rrFill(daPlayers[0].x, daPlayers[0].y);
+    }
+}
+
+function daDrawPlayersIntermediate(step, numSteps) { // number of total steps - 1 if frame per tick 1
+    var stepRatio = step / numSteps;
+
+    console.log(stepRatio);
+
+    rSetDrawColor((daMiddleColor >> 16) & 255, (daMiddleColor >> 8) & 255, daMiddleColor & 255, 255);
+    for (let j = 0; j < numGroups; j++) {
+        var daPlayers = daGroups[j];
+        for (let i = 1; i < daPlayers.length - 1; ++i) {
+            if (i % 2 === 0) {
+                rrFill(daPlayers[i].x * stepRatio + daPlayers[i].prevX * (1 - stepRatio) , daPlayers[i].y * stepRatio + daPlayers[i].prevY * (1 - stepRatio));
+            }
+        }
+    }
+
+    rSetDrawColor((daAlternateColor >> 16) & 255, (daAlternateColor >> 8) & 255, daAlternateColor & 255, 255);
+    for (let j = 0; j < numGroups; j++) {
+        var daPlayers = daGroups[j];
+        for (let i = 1; i < daPlayers.length - 1; ++i) {
+            if (i % 2 === 1) {
+                rrFill(daPlayers[i].x * stepRatio + daPlayers[i].prevX * (1 - stepRatio) , daPlayers[i].y * stepRatio + daPlayers[i].prevY * (1 - stepRatio));
+            }
+        }
+    }
+
+    rSetDrawColor((daBackColor >> 16) & 255, (daBackColor >> 8) & 255, daBackColor & 255, 255);
+    for (let j = 0; j < numGroups; j++) {
+        var daPlayers = daGroups[j];
+        rrFill(daPlayers[daPlayers.length - 1].x * stepRatio + daPlayers[daPlayers.length - 1].prevX * (1 - stepRatio), daPlayers[daPlayers.length - 1].y * stepRatio + daPlayers[daPlayers.length - 1].prevY * (1 - stepRatio));
+    }
+
+    rSetDrawColor((daLeadColor >> 16) & 255, (daLeadColor >> 8) & 255, daLeadColor & 255, 255);
+    for (let j = 0; j < numGroups; j++) {
+        var daPlayers = daGroups[j];
+        rrFill(daPlayers[0].x * stepRatio + daPlayers[0].prevX * (1 - stepRatio) , daPlayers[0].y * stepRatio + daPlayers[0].prevY * (1 - stepRatio));
     }
 }
 
@@ -298,9 +389,15 @@ function plPlayer(x, y, id, orientation, group) {
     this.destX = x;
     this.destY = y;
 
+    this.prevX = x;
+    this.prevY = y;
+
     this.tick = function() {
         var oldX = this.x;
         var oldY = this.y;
+
+        this.prevX = this.x;
+        this.prevY = this.y;
 
         if (!plIsDancing[this.group] && (this.id === 0)) { // if dance leader, then move to destination tile
             if (plPathQueuePos[this.group] > 0) {
@@ -826,7 +923,9 @@ function rrFillOpaque(x, y) {
 }
 
 function rrFill(x, y) {
-    rDrawFilledRect(x*rrTileSize, y*rrTileSize, rrTileSize, rrTileSize);
+    rDrawFilledRect(Math.floor(x*rrTileSize), Math.floor(y*rrTileSize), rrTileSize, rrTileSize);
+
+    console.log(Math.floor(x*rrTileSize));
 }
 
 function rrFillBig(x, y, width, height) {
