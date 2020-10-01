@@ -365,12 +365,12 @@ function daInit() {
         var daPlayers = [];
 
         if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
-            daPlayers.push(new plPlayer(20, 20 + i * 2, daPlayers.length, "w", i));
+            daPlayers.push(new plPlayer(20, 28 + i * 2, daPlayers.length, "w", i));
             for (let j = 1; j < simNumPlayersList[i]; j++) {
                 if (j % 2 === 1) {
-                    daPlayers.push(new plPlayer(21, 20 + i * 2, daPlayers.length, "w", i));
+                    daPlayers.push(new plPlayer(21, 28 + i * 2, daPlayers.length, "w", i));
                 } else {
-                    daPlayers.push(new plPlayer(22, 20 + i * 2, daPlayers.length, "e", i));
+                    daPlayers.push(new plPlayer(22, 28 + i * 2, daPlayers.length, "e", i));
                 }
             }
         } else {
