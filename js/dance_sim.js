@@ -46,12 +46,26 @@ function simInit() {
     simToggleTickPerClick.onchange = simToggleTickPerClickOnChange;
     simStartStopButton = document.getElementById(HTML_START_BUTTON);
     simStartStopButton.onclick = simStartStopButtonOnClick;
-    rInit(canvas, 128*12, 100*12);
+
+    if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+        rInit(canvas, 64*12, 48*12);
+    } else {
+        rInit(canvas, 128 * 12, 100 * 12);
+    }
     rrInit(12);
 
     var mOPEN_MAP = [];
-    for (let i = 0; i < 12800; i++) {
-        mOPEN_MAP.push(0);
+
+    if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+        for (let i = 0; i < 3072; i++) {
+            mOPEN_MAP.push(0);
+        }
+    } else {
+
+        for (let i = 0; i < 12800; i++) {
+            mOPEN_MAP.push(0);
+        }
+
     }
 
     simPlayersVisible = true;
@@ -60,7 +74,13 @@ function simInit() {
     simCurrentGroup = 0;
     numGroups = simNumGroupsInput.value;
 
-    mInit(mOPEN_MAP, 128, 100);
+    if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+        mInit(mOPEN_MAP, 64, 48);
+    } else {
+
+        mInit(mOPEN_MAP, 128, 100);
+
+    }
 
     simReset();
 
@@ -190,11 +210,24 @@ function simTick() {
 
     if (simSmoothMovement) {
         subTick = 1.0;
-        numSubTicks = simStaticTickDuration / 30.0;
+
+        if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+            numSubTicks = simStaticTickDuration / 120.0;
+        } else {
+
+            numSubTicks = simStaticTickDuration / 30.0;
+
+        }
 
         simDrawIntermediate();
 
-        subTickInterval = setInterval(simDrawIntermediate, 30);
+        if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+            subTickInterval = setInterval(simDrawIntermediate, 120);
+        } else {
+
+            subTickInterval = setInterval(simDrawIntermediate, 30);
+
+        }
     } else {
         simDraw();
     }
@@ -1115,7 +1148,11 @@ function decreaseSize() {
 }
 
 function setTileSize(size) {
-    rResizeCanvas(size * 128, size * 100);
+    if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+        rResizeCanvas(size * 64, size * 48);
+    } else {
+        rResizeCanvas(size * 128, size * 100);
+    }
     rrSetTileSize(size);
     simDraw();
 }
