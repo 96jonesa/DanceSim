@@ -308,32 +308,35 @@ function daDrawPlayers() {
 function daDrawPlayersIntermediate(step, numSteps) { // number of total steps - 1 if frame per tick 1
     var stepRatio = step / numSteps;
 
-    console.log(stepRatio);
+    //console.log(stepRatio);
+    if (simPlayersVisible) {
 
-    rSetDrawColor((daMiddleColor >> 16) & 255, (daMiddleColor >> 8) & 255, daMiddleColor & 255, 255);
-    for (let j = 0; j < numGroups; j++) {
-        var daPlayers = daGroups[j];
-        for (let i = 1; i < daPlayers.length - 1; ++i) {
-            if (i % 2 === 0) {
-                rrFill(daPlayers[i].x * stepRatio + daPlayers[i].prevX * (1 - stepRatio) , daPlayers[i].y * stepRatio + daPlayers[i].prevY * (1 - stepRatio));
+        rSetDrawColor((daMiddleColor >> 16) & 255, (daMiddleColor >> 8) & 255, daMiddleColor & 255, 255);
+        for (let j = 0; j < numGroups; j++) {
+            var daPlayers = daGroups[j];
+            for (let i = 1; i < daPlayers.length - 1; ++i) {
+                if (i % 2 === 0) {
+                    rrFill(daPlayers[i].x * stepRatio + daPlayers[i].prevX * (1 - stepRatio), daPlayers[i].y * stepRatio + daPlayers[i].prevY * (1 - stepRatio));
+                }
             }
         }
-    }
 
-    rSetDrawColor((daAlternateColor >> 16) & 255, (daAlternateColor >> 8) & 255, daAlternateColor & 255, 255);
-    for (let j = 0; j < numGroups; j++) {
-        var daPlayers = daGroups[j];
-        for (let i = 1; i < daPlayers.length - 1; ++i) {
-            if (i % 2 === 1) {
-                rrFill(daPlayers[i].x * stepRatio + daPlayers[i].prevX * (1 - stepRatio) , daPlayers[i].y * stepRatio + daPlayers[i].prevY * (1 - stepRatio));
+        rSetDrawColor((daAlternateColor >> 16) & 255, (daAlternateColor >> 8) & 255, daAlternateColor & 255, 255);
+        for (let j = 0; j < numGroups; j++) {
+            var daPlayers = daGroups[j];
+            for (let i = 1; i < daPlayers.length - 1; ++i) {
+                if (i % 2 === 1) {
+                    rrFill(daPlayers[i].x * stepRatio + daPlayers[i].prevX * (1 - stepRatio), daPlayers[i].y * stepRatio + daPlayers[i].prevY * (1 - stepRatio));
+                }
             }
         }
-    }
 
-    rSetDrawColor((daBackColor >> 16) & 255, (daBackColor >> 8) & 255, daBackColor & 255, 255);
-    for (let j = 0; j < numGroups; j++) {
-        var daPlayers = daGroups[j];
-        rrFill(daPlayers[daPlayers.length - 1].x * stepRatio + daPlayers[daPlayers.length - 1].prevX * (1 - stepRatio), daPlayers[daPlayers.length - 1].y * stepRatio + daPlayers[daPlayers.length - 1].prevY * (1 - stepRatio));
+        rSetDrawColor((daBackColor >> 16) & 255, (daBackColor >> 8) & 255, daBackColor & 255, 255);
+        for (let j = 0; j < numGroups; j++) {
+            var daPlayers = daGroups[j];
+            rrFill(daPlayers[daPlayers.length - 1].x * stepRatio + daPlayers[daPlayers.length - 1].prevX * (1 - stepRatio), daPlayers[daPlayers.length - 1].y * stepRatio + daPlayers[daPlayers.length - 1].prevY * (1 - stepRatio));
+        }
+
     }
 
     rSetDrawColor((daLeadColor >> 16) & 255, (daLeadColor >> 8) & 255, daLeadColor & 255, 255);
@@ -831,7 +834,7 @@ function plPathfind(destX, destY, group) {
         }
     }
 
-    console.log("found path");
+    //console.log("found path");
 }
 var plPathQueuePos;
 var plShortestDistances;
