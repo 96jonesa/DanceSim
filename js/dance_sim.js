@@ -16,6 +16,7 @@ const HTML_LEAD_COLOR = "lead";
 const HTML_MIDDLE_COLOR = "middle";
 const HTML_BACK_COLOR = "back";
 const HTML_ALTERNATE_COLOR = "alternate";
+const HTML_MARKER_COLOR = "marker";
 const HTML_TOGGLE_TICK_PER_CLICK = "tickperclick";
 
 window.onload = simInit;
@@ -24,6 +25,9 @@ window.onload = simInit;
 
 var simSmoothMovement;
 var simPlayersVisible;
+var simMarkingTiles;
+
+var simMarkedTiles;
 
 function simInit() {
     let canvas = document.getElementById(HTML_CANVAS);
@@ -42,6 +46,7 @@ function simInit() {
     simMiddleColorInput = document.getElementById(HTML_MIDDLE_COLOR);
     simBackColorInput = document.getElementById(HTML_BACK_COLOR);
     simAlternateColorInput = document.getElementById(HTML_ALTERNATE_COLOR);
+    simMarkerColorInput = document.getElementById(HTML_MARKER_COLOR);
     simToggleTickPerClick = document.getElementById(HTML_TOGGLE_TICK_PER_CLICK);
     simToggleTickPerClick.onchange = simToggleTickPerClickOnChange;
     simStartStopButton = document.getElementById(HTML_START_BUTTON);
@@ -70,6 +75,8 @@ function simInit() {
 
     simPlayersVisible = true;
     simSmoothMovement = false;
+    simMarkingTiles = false;
+    simMarkedTiles = [];
 
     simCurrentGroup = 0;
     numGroups = simNumGroupsInput.value;
@@ -97,6 +104,10 @@ function toggleVisibilityOfFollowers() {
 
 function toggleSmoothMovement() {
     simSmoothMovement = !simSmoothMovement;
+}
+
+function toggleMarkingTiles() {
+    simMarkingTiles = !simMarkingTiles;
 }
 
 function simReset() {
@@ -149,12 +160,25 @@ function simCanvasOnMouseDown(e) {
     let xTile = Math.trunc((e.clientX - canvasRect.left) / rrTileSize);
     let yTile = Math.trunc((canvasRect.bottom - 1 - e.clientY) / rrTileSize);
     if (e.button === 0) {
-        plPathfind(xTile, yTile, simCurrentGroup);
-        plIsDancing[simCurrentGroup] = false;
+        if (simMarkingTiles) {
+            var tileAlreadyMarked = false;
+            for (let i = 0; i < simMarkedTiles.length; i++) {
+                if ((simMarkedTiles[i][0] === xTile) && (simMarkedTiles[i][1] === yTile)) {
+                    tileAlreadyMarked = true;
+                    simMarkedTiles.splice(i, 1);
+                }
+            }
+            if (!tileAlreadyMarked) {
+                simMarkedTiles.push([xTile, yTile]);
+            }
+        } else {
+            plPathfind(xTile, yTile, simCurrentGroup);
+            plIsDancing[simCurrentGroup] = false;
 
-        if (simTickPerClick) {
-            clearInterval(simTickTimerId);
-            simTick();
+            if (simTickPerClick) {
+                clearInterval(simTickTimerId);
+                simTick();
+            }
         }
     } else if (e.button === 2) {
         startDancing();
@@ -253,6 +277,7 @@ var simLeadColorInput;
 var simMiddleColorInput;
 var simBackColorInput;
 var simAlternateColorInput;
+var simMarkerColorInput;
 var simToggleTickPerClick;
 var simTickTimerId;
 var simStartStopButton;
@@ -393,6 +418,7 @@ function daInit() {
     daMiddleColor = Number("0x" + simMiddleColorInput.value.substring(1));
     daBackColor = Number("0x" + simBackColorInput.value.substring(1));
     daAlternateColor = Number("0x" + simAlternateColorInput.value.substring(1));
+    daMarkerColor = Number("0x" + simMarkerColorInput.value.substring(1));
 }
 
 //var daPlayers;
@@ -406,6 +432,7 @@ var daLeadColor;
 var daMiddleColor;
 var daBackColor;
 var daAlternateColor;
+var daMarkerColor;
 
 //}
 
@@ -933,6 +960,11 @@ function mDrawMap() {
                 }
             }
         }
+    }
+
+    rSetDrawColor((daMarkerColor >> 16) & 255, (daMarkerColor >> 8) & 255, daMarkerColor & 255, 255);
+    for (let i = 0; i < simMarkedTiles.length; i++) {
+        rrFill(simMarkedTiles[i][0], simMarkedTiles[i][1]);
     }
 }
 
