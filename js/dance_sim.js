@@ -190,11 +190,11 @@ function simTick() {
 
     if (simSmoothMovement) {
         subTick = 1.0;
-        numSubTicks = simStaticTickDuration / 30.0;
+        numSubTicks = simStaticTickDuration / 60.0;
 
         simDrawIntermediate();
 
-        subTickInterval = setInterval(simDrawIntermediate, 30);
+        subTickInterval = setInterval(simDrawIntermediate, 60);
     } else {
         simDraw();
     }
