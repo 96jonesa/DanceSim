@@ -171,6 +171,10 @@ function simCanvasOnMouseDown(e) {
             if (!tileAlreadyMarked) {
                 simMarkedTiles.push([xTile, yTile]);
             }
+
+            if (!simIsRunning) {
+                simDraw();
+            }
         } else {
             plPathfind(xTile, yTile, simCurrentGroup);
             plIsDancing[simCurrentGroup] = false;
