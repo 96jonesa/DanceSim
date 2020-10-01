@@ -363,12 +363,24 @@ function daInit() {
 
     for (let i = 0; i < numGroups; i++) {
         var daPlayers = [];
-        daPlayers.push(new plPlayer(20, 80 + i * 2, daPlayers.length, "w", i));
-        for (let j = 1; j < simNumPlayersList[i]; j++) {
-            if (j % 2 === 1) {
-                daPlayers.push(new plPlayer(21, 80 + i * 2, daPlayers.length, "w", i));
-            } else {
-                daPlayers.push(new plPlayer(22, 80 + i * 2, daPlayers.length, "e", i));
+
+        if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+            daPlayers.push(new plPlayer(20, 20 + i * 2, daPlayers.length, "w", i));
+            for (let j = 1; j < simNumPlayersList[i]; j++) {
+                if (j % 2 === 1) {
+                    daPlayers.push(new plPlayer(21, 20 + i * 2, daPlayers.length, "w", i));
+                } else {
+                    daPlayers.push(new plPlayer(22, 20 + i * 2, daPlayers.length, "e", i));
+                }
+            }
+        } else {
+            daPlayers.push(new plPlayer(20, 80 + i * 2, daPlayers.length, "w", i));
+            for (let j = 1; j < simNumPlayersList[i]; j++) {
+                if (j % 2 === 1) {
+                    daPlayers.push(new plPlayer(21, 80 + i * 2, daPlayers.length, "w", i));
+                } else {
+                    daPlayers.push(new plPlayer(22, 80 + i * 2, daPlayers.length, "e", i));
+                }
             }
         }
         daGroups.push(daPlayers);
